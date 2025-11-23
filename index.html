@@ -341,8 +341,33 @@ function obfuscate(){
     const script=document.getElementById("input").value.trim();
     if(!script) return showStatus("Antes de obfuscar, insira um script!","err");
 
-    const encoded=toBase64(script);
-    const final=`loadstring((function(b)local t={}data=b:gsub('[^%w%+/%=]','')for i=1,#data,4 do local c1=('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'):find(data:sub(i,i))or 1 local c2=('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'):find(data:sub(i+1,i+1))or 1 local c3=('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'):find(data:sub(i+2,i+2))or 1 local c4=('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'):find(data:sub(i+3,i+3))or 1 local n=(c1-1)*262144+(c2-1)*4096+(c3-1)*64+(c4-1)t[#t+1]=string.char(math.floor(n/65536)%256) if data:sub(i+2,i+2)~='=' then t[#t+1]=string.char(math.floor(n/256)%256) end if data:sub(i+3,i+3)~='=' then t[#t+1]=string.char(n%256) end end return table.concat(t) end)([[$encoded]]))()`;
+    const encoded = toBase64(script);
+
+    const final = `
+local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
+local function decode(data)
+    data = data:gsub('[^'..b..'=]', '')
+    local t = {}
+    for i=1,#data,4 do
+        local c1 = b:find(data:sub(i,i)) or 1
+        local c2 = b:find(data:sub(i+1,i+1)) or 1
+        local c3 = b:find(data:sub(i+2,i+2)) or 1
+        local c4 = b:find(data:sub(i+3,i+3)) or 1
+
+        local n = (c1-1)*262144 + (c2-1)*4096 + (c3-1)*64 + (c4-1)
+        local b1 = math.floor(n / 65536) % 256
+        local b2 = math.floor(n / 256) % 256
+        local b3 = n % 256
+
+        table.insert(t, string.char(b1))
+        if data:sub(i+2,i+2) ~= '=' then table.insert(t, string.char(b2)) end
+        if data:sub(i+3,i+3) ~= '=' then table.insert(t, string.char(b3)) end
+    end
+    return table.concat(t)
+end
+
+loadstring(decode([[${encoded}]]))()
+`;
 
     document.getElementById("output").value=final.trim();
     showStatus("Pronto maninho(a), script obfuscado!","ok");
