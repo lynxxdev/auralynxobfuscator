@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Auralynx Obfuscator</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+
+body{
+    background:#000;
+    overflow:hidden;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding:20px;
+    position:relative;
+}
+
+.particles{
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100%;
+    z-index:-1;
+}
+.particle{
+    position:absolute;
+    width:6px;height:6px;
+    background:radial-gradient(circle, #ff0000, #00ff00);
+    border-radius:50%;
+    opacity:0.6;
+    animation:float 6s linear infinite;
+}
+@keyframes float{
+    from{transform:translateY(100vh) scale(0.6);}
+    to{transform:translateY(-10vh) scale(1.2);}
+}
+
+.container{
+    width:95%;
+    max-width:680px;
+    background:rgba(0,0,0,0.7);
+    border-radius:20px;
+    padding:30px;
+    backdrop-filter:blur(12px);
+    box-shadow:0 0 25px #ff0000aa, 0 0 40px #00ff0066;
+}
+
+.titleWrap{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    margin-bottom:25px;
+}
+.titleIcon{
+    width:90px;
+    height:90px;
+}
+.titleIcon img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+h1{
+    text-align:center;
+    font-size:34px;
+    font-weight:800;
+    background:linear-gradient(135deg,#ff0000,#00ff00);
+    -webkit-background-clip:text;
+    color:transparent;
+}
+
+.tabs{
+    display:flex;
+    margin-top:10px;
+    border-bottom:1px solid #ffffff22;
+}
+.tab{
+    flex:1;
+    padding:14px;
+    text-align:center;
+    font-weight:bold;
+    cursor:pointer;
+    color:#ff4d4d;
+    transition:0.2s;
+    font-size:18px;
+}
+.tab.active{
+    background:linear-gradient(135deg,#ff0000,#00ff00);
+    -webkit-background-clip:text;
+    color:transparent;
+    border-bottom:3px solid #00ff00;
+}
+.tab:hover{
+    color:#00ff00;
+}
+
+.tabContent{
+    display:none;
+    margin-top:20px;
+}
+.tabContent.active{
+    display:block;
+}
+
+label{
+    font-weight:bold;
+    font-size:18px;
+    margin-top:12px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.labelIcon{
+    width:26px;
+    height:26px;
+}
+.labelIcon img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.fileUploadBox{
+    width:100%;
+    height:55px;
+    background:#0a0a0a;
+    border:1px solid #ff0000;
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-top:6px;
+    position:relative;
+    cursor:pointer;
+    transition:0.25s;
+    color:white;
+    font-size:17px;
+}
+.fileUploadBox:hover{
+    transform:scale(1.03);
+    box-shadow:0 0 12px #00ff00aa;
+}
+#fileInput{
+    position:absolute;
+    inset:0;
+    opacity:0;
+    cursor:pointer;
+}
+
+textarea{
+    width:100%;
+    height:200px;
+    background:#0a0a0a;
+    border:1px solid #ff0000;
+    border-radius:14px;
+    padding:14px;
+    color:#00ff00;
+    font-family:Consolas, monospace;
+    margin-top:6px;
+    font-size:15px;
+}
+textarea:focus{
+    border-color:#00ff00;
+    box-shadow:0 0 10px #00ff00;
+}
+
+button{
+    width:100%;
+    padding:15px;
+    margin-top:12px;
+    font-size:20px;
+    font-weight:bold;
+    border:none;
+    border-radius:16px;
+    cursor:pointer;
+    background:linear-gradient(135deg,#ff0000,#000000,#00ff00);
+    color:white;
+    transition:2.5s;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+}
+button img{
+    width:24px;
+    height:24px;
+}
+button:hover{
+    transform:scale(1.05);
+    box-shadow:0 0 15px #00ff00aa;
+}
+
+#errorBox{
+    width:100%;
+    padding:12px;
+    margin-top:15px;
+    border-radius:14px;
+    display:none;
+    font-weight:bold;
+    font-size:16px;
+}
+.err{
+    background:#3b0000;
+    color:#ff0000;
+}
+.ok{
+    background:#003b1a;
+    color:#00ff00;
+}
+
+@media(max-width:480px){
+    .container{
+        padding:20px;
+        max-width:95%;
+    }
+    h1{font-size:26px;}
+    .tab{font-size:15px; padding:10px;}
+    textarea{height:160px;}
+    button{font-size:16px; padding:12px;}
+    .titleIcon{width:65px;height:65px;}
+}
+</style>
+</head>
+
+<body>
+
+<div class="particles" id="particles"></div>
+
+<div class="container">
+
+    <div class="titleWrap">
+        <div class="titleIcon">
+            <img src="https://i.imgur.com/QU92bm2.png">
+        </div>
+        <h1>Auralynx Obfuscator</h1>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" data-tab="inputTab">SCRIPT</div>
+        <div class="tab" data-tab="outputTab">OBFUSCAÇÃO</div>
+        <div class="tab" data-tab="infoTab">SOBRE</div>
+    </div>
+
+    <div class="tabContent active" id="inputTab">
+        <label>
+            <div class="labelIcon">
+                <img src="https://i.imgur.com/Rbyu92D.png">
+            </div>
+            Upload de arquivos (apenas.lua):
+        </label>
+
+        <div class="fileUploadBox" id="uploadBox">
+            <span>Clique aqui para selecionar seu arquivo.</span>
+            <input type="file" id="fileInput" accept=".lua">
+        </div>
+
+        <label>
+            <div class="labelIcon">
+                <img src="https://i.imgur.com/aM7WwFs.png">
+            </div>
+            Código do Script:
+        </label>
+
+        <textarea id="input" placeholder="Cole o seu script aqui:"></textarea>
+
+        <div id="errorBox"></div>
+
+        <button onclick="obfuscate()">Obfuscar Script</button>
+    </div>
+
+    <div class="tabContent" id="outputTab">
+        <label>
+            <div class="labelIcon">
+                <img src="https://i.imgur.com/bxcO2D2.png">
+            </div>
+            Resultado da Obfuscação:
+        </label>
+
+        <textarea id="output" readonly placeholder="Seu script obfuscado aparece aqui."></textarea>
+
+        <button onclick="copyOutput()">Copiar</button>
+        <button onclick="downloadOutput()">Baixar</button>
+    </div>
+
+    <div class="tabContent" id="infoTab">
+        <label>
+            <div class="labelIcon">
+                <img src="https://i.imgur.com/EUtwDj8.png">
+            </div>
+            Ferramenta desenvolvida e estilizada por The Freeman, trazendo uma interface moderna, e totalmente funcional.
+        </label>
+
+        <button onclick="window.open('https://discord.gg/SEUSERVERAQUI','_blank')">
+            <img src="https://i.imgur.com/NDx21Um.png">
+            Entrar em nosso discord
+        </button>
+    </div>
+
+</div>
+
+<script>
+document.querySelectorAll(".tab").forEach(tab=>{
+    tab.addEventListener("click",()=>{
+        document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+        document.querySelectorAll(".tabContent").forEach(c=>c.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(tab.dataset.tab).classList.add("active");
+    });
+});
+
+function showStatus(msg,type){
+    const box=document.getElementById("errorBox");
+    box.innerText=msg;
+    box.className=type;
+    box.style.display="block";
+}
+function clearStatus(){document.getElementById("errorBox").style.display="none";}
+
+function toBase64(str){return btoa(unescape(encodeURIComponent(str)));}
+
+document.getElementById("fileInput").addEventListener("change",(e)=>{
+    const file=e.target.files[0];
+    if(!file)return;
+
+    if(!file.name.endsWith(".lua")) return showStatus("Opa! Só aceitamos arquivos.lua!","err");
+
+    document.querySelector("#uploadBox span").textContent="Seu arquivo é este:" +file.name;
+
+    const reader=new FileReader();
+    reader.onload=x=>{
+        document.getElementById("input").value=x.target.result;
+        clearStatus();
+    };
+    reader.readAsText(file);
+});
+
+function obfuscate(){
+    const script=document.getElementById("input").value.trim();
+    if(!script) return showStatus("Antes de obfuscar, insira um script!","err");
+
+    const encoded=toBase64(script);
+    const final=`loadstring((function(b)local t={}data=b:gsub('[^%w%+/%=]','')for i=1,#data,4 do local c1=('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'):find(data:sub(i,i))or 1 local c2=('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'):find(data:sub(i+1,i+1))or 1 local c3=('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'):find(data:sub(i+2,i+2))or 1 local c4=('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'):find(data:sub(i+3,i+3))or 1 local n=(c1-1)*262144+(c2-1)*4096+(c3-1)*64+(c4-1)t[#t+1]=string.char(math.floor(n/65536)%256) if data:sub(i+2,i+2)~='=' then t[#t+1]=string.char(math.floor(n/256)%256) end if data:sub(i+3,i+3)~='=' then t[#t+1]=string.char(n%256) end end return table.concat(t) end)([[$encoded]]))()`;
+
+    document.getElementById("output").value=final.trim();
+    showStatus("Pronto maninho(a), script obfuscado!","ok");
+}
+
+function showOutputStatus(msg, type) {
+    const box = document.getElementById("outputStatus");
+    if (!box) {
+        const newBox = document.createElement("div");
+        newBox.id = "outputStatus";
+        newBox.style.width = "100%";
+        newBox.style.padding = "10px";
+        newBox.style.marginTop = "12px";
+        newBox.style.borderRadius = "12px";
+        newBox.style.fontWeight = "bold";
+        document.getElementById("outputTab").appendChild(newBox);
+        showOutputStatus(msg, type);
+        return;
+    }
+    box.innerText = msg;
+    box.className = type;
+    box.style.display = "block";
+}
+
+function copyOutput() {
+    const out = document.getElementById("output");
+    out.select();
+    document.execCommand("copy");
+    showOutputStatus("Obfuscação copiada para sua área de transferência.", "ok");
+}
+
+function downloadOutput() {
+    const code = document.getElementById("output").value;
+    if (!code) return showOutputStatus("Não posso baixar conteúdo vazio.", "err");
+    
+    const blob = new Blob([code], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "obfuscated.lua";
+    a.click();
+    URL.revokeObjectURL(url);
+    showOutputStatus("Baixando...", "ok");
+}
+
+const particleContainer = document.getElementById("particles");
+for (let i = 0; i < 100; i++) {
+    const p = document.createElement("div");
+    p.className = "particle";
+    p.style.left = Math.random() * 100 + "%";
+    p.style.top = Math.random() * 100 + "vh";
+    p.style.opacity = 1;
+    const duration = 1 + Math.random() * 2 + "s";
+    p.style.animationDuration = duration;
+    p.style.animationDelay = "-" + (Math.random() * parseFloat(duration)) + "s";
+    particleContainer.appendChild(p);
+}
+</script>
+
+</body>
+</html>
